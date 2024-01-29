@@ -5,3 +5,4 @@ tetris_base.tgz
 tetris
 *.o
 objs
+start

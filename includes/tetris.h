@@ -7,4 +7,7 @@
 #include <sys/time.h>
 #include <ncurses.h>
 
+#define FIELD_ROW 20
+#define FIELD_COL 15
+
 #endif
