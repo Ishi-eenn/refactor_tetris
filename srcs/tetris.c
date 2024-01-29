@@ -1,7 +1,5 @@
 #include "tetris.h"
 
-// #define R 20
-// #define C 15
 #define T 1
 #define F 0
 
@@ -12,8 +10,8 @@ suseconds_t timer = 400000;
 int decrease = 1000;
 
 typedef struct {
-    char **array;
-    int width, row, col;
+	char **array;
+	int width, row, col;
 } Struct;
 Struct current;
 
@@ -31,35 +29,32 @@ Struct FunctionCS(Struct shape){
 	Struct new_shape = shape;
 	char **copyshape = shape.array;
 	new_shape.array = (char**)malloc(new_shape.width*sizeof(char*));
-    int i, j;
-    for(i = 0; i < new_shape.width; i++){
+	 for(int i = 0; i < new_shape.width; i++){
 		new_shape.array[i] = (char*)malloc(new_shape.width*sizeof(char));
-		for(j=0; j < new_shape.width; j++) {
+		for(int j = 0; j < new_shape.width; j++) {
 			new_shape.array[i][j] = copyshape[i][j];
 		}
-    }
-    return new_shape;
+	}
+	return new_shape;
 }
 
 void FunctionDS(Struct shape){
-    int i;
-    for(i = 0; i < shape.width; i++){
+	for(int i = 0; i < shape.width; i++){
 		free(shape.array[i]);
-    }
-    free(shape.array);
+	}
+	free(shape.array);
 }
 
 int FunctionCP(Struct shape){
 	char **array = shape.array;
-	int i, j;
-	for(i = 0; i < shape.width;i++) {
-		for(j = 0; j < shape.width ;j++){
-			if((shape.col+j < 0 || shape.col+j >= FIELD_COL || shape.row+i >= FIELD_ROW)){
+	for(int i = 0; i < shape.width;i++) {
+		for(int j = 0; j < shape.width; j++){
+			if((shape.col + j < 0 || shape.col + j >= FIELD_COL || shape.row + i >= FIELD_ROW)){
 				if(array[i][j])
 					return F;
 
 			}
-			else if(Table[shape.row+i][shape.col+j] && array[i][j])
+			else if(Table[shape.row + i][shape.col + j] && array[i][j])
 				return F;
 		}
 	}
@@ -68,10 +63,8 @@ int FunctionCP(Struct shape){
 
 void FunctionRS(Struct shape){
 	Struct temp = FunctionCS(shape);
-	int i, j, k, width;
-	width = shape.width;
-	for(i = 0; i < width ; i++){
-		for(j = 0, k = width-1; j < width ; j++, k--){
+	for(int i = 0, width = shape.width; i < width ; i++){
+		for(int j = 0, k = width - 1; j < width ; j++, k--){
 				shape.array[i][j] = temp.array[k][i];
 		}
 	}
@@ -80,19 +73,18 @@ void FunctionRS(Struct shape){
 
 void FunctionPT(){
 	char Buffer[FIELD_ROW][FIELD_COL] = {0};
-	int i, j;
-	for(i = 0; i < current.width ;i++){
-		for(j = 0; j < current.width ; j++){
+	for(int i = 0; i < current.width; i++){
+		for(int j = 0; j < current.width; j++){
 			if(current.array[i][j])
-				Buffer[current.row+i][current.col+j] = current.array[i][j];
+				Buffer[current.row + i][current.col + j] = current.array[i][j];
 		}
 	}
 	clear();
-	for(i=0; i<FIELD_COL-9; i++)
+	for(int i = 0; i < FIELD_COL - 9; i++)
 		printw(" ");
 	printw("42 Tetris\n");
-	for(i = 0; i < FIELD_ROW ;i++){
-		for(j = 0; j < FIELD_COL ; j++){
+	for(int i = 0; i < FIELD_ROW; i++){
+		for(int j = 0; j < FIELD_COL; j++){
 			printw("%c ", (Table[i][j] + Buffer[i][j])? '#': '.');
 		}
 		printw("\n");
@@ -135,17 +127,16 @@ int main() {
 					if(FunctionCP(temp))
 						current.row++;
 					else {
-						int i, j;
-						for(i = 0; i < current.width ;i++){
-							for(j = 0; j < current.width ; j++){
+						for(int i = 0; i < current.width ;i++){
+							for(int j = 0; j < current.width ; j++){
 								if(current.array[i][j])
 									Table[current.row+i][current.col+j] = current.array[i][j];
 							}
 						}
-						int n, m, sum, count=0;
-						for(n=0;n<FIELD_ROW;n++){
+						int sum, count=0;
+						for(int n=0;n<FIELD_ROW;n++){
 							sum = 0;
-							for(m=0;m< FIELD_COL;m++) {
+							for(int m=0;m< FIELD_COL;m++) {
 								sum+=Table[n][m];
 							}
 							if(sum==FIELD_COL){
@@ -198,17 +189,16 @@ int main() {
 					if(FunctionCP(temp))
 						current.row++;
 					else {
-						int i, j;
-						for(i = 0; i < current.width ;i++){
-							for(j = 0; j < current.width ; j++){
+						for(int i = 0; i < current.width ;i++){
+							for(int j = 0; j < current.width ; j++){
 								if(current.array[i][j])
-									Table[current.row+i][current.col+j] = current.array[i][j];
+									Table[current.row + i][current.col + j] = current.array[i][j];
 							}
 						}
-						int n, m, sum, count=0;
-						for(n=0;n<FIELD_ROW;n++){
+						int sum, count=0;
+						for(int n=0;n<FIELD_ROW;n++){
 							sum = 0;
-							for(m=0;m< FIELD_COL;m++) {
+							for(int m=0;m< FIELD_COL;m++) {
 								sum+=Table[n][m];
 							}
 							if(sum==FIELD_COL){
@@ -255,9 +245,8 @@ int main() {
 	}
 	FunctionDS(current);
 	endwin();
-	int i, j;
-	for(i = 0; i < FIELD_ROW ;i++){
-		for(j = 0; j < FIELD_COL ; j++){
+	for(int i = 0; i < FIELD_ROW ;i++){
+		for(int j = 0; j < FIELD_COL ; j++){
 			printf("%c ", Table[i][j] ? '#': '.');
 		}
 		printf("\n");
