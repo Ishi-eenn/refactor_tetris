@@ -1,11 +1,8 @@
 #include "tetris.h"
 
-#define T 1
-#define F 0
-
 char Table[FIELD_ROW][FIELD_COL] = {0};
 int final = 0;
-char GameOn = T;
+char GameOn = true;
 
 t_time time111 = {.timer = 400000, .decrease = 1000};
 
@@ -25,6 +22,21 @@ const Struct StructsArray[7]= {
 	{(char *[]){(char []){0,0,0,0}, (char []){1,1,1,1}, (char []){0,0,0,0}, (char []){0,0,0,0}}, 4}
 };
 
+void print_game_field(){
+	for(int i = 0; i < FIELD_ROW; i++){
+		for(int j = 0; j < FIELD_COL; j++){
+			printf("%c ", Table[i][j] ? '#': '.');
+		}
+		printf("\n");
+	}
+}
+
+void displayGameOver() {
+	print_game_field();
+	printf("\nGame over!\n");
+	printf("\nScore: %d\n", final);
+}
+
 Struct FunctionCS(Struct shape){
 	Struct new_shape = shape;
 	char **copyshape = shape.array;
@@ -38,7 +50,7 @@ Struct FunctionCS(Struct shape){
 	return new_shape;
 }
 
-void FunctionDS(Struct shape){
+void freeShapeArray(Struct shape){
 	for(int i = 0; i < shape.width; i++){
 		free(shape.array[i]);
 	}
@@ -51,14 +63,14 @@ int FunctionCP(Struct shape){
 		for(int j = 0; j < shape.width; j++){
 			if((shape.col + j < 0 || shape.col + j >= FIELD_COL || shape.row + i >= FIELD_ROW)){
 				if(array[i][j])
-					return F;
+					return false;
 
 			}
 			else if(Table[shape.row + i][shape.col + j] && array[i][j])
-				return F;
+				return false;
 		}
 	}
-	return T;
+	return true;
 }
 
 void FunctionRS(Struct shape){
@@ -68,7 +80,7 @@ void FunctionRS(Struct shape){
 				shape.array[i][j] = temp.array[k][i];
 		}
 	}
-	FunctionDS(temp);
+	freeShapeArray(temp);
 }
 
 void FunctionPT(){
@@ -94,7 +106,7 @@ void FunctionPT(){
 
 struct timeval before_now, now;
 int hasToUpdate(){
-	return ((suseconds_t)(now.tv_sec*1000000 + now.tv_usec) -((suseconds_t)before_now.tv_sec*1000000 + before_now.tv_usec)) > time111.timer;
+	return ((suseconds_t)(now.tv_sec*1000000 + now.tv_usec) - ((suseconds_t)before_now.tv_sec*1000000 + before_now.tv_usec)) > time111.timer;
 }
 
 void set_timeout(int time) {
@@ -102,22 +114,80 @@ void set_timeout(int time) {
 	timeout(1);
 }
 
+void title() {
+	for(int i = 0; i < current.width ;i++){
+		for(int j = 0; j < current.width ; j++){
+			if(current.array[i][j])
+				Table[current.row + i][current.col + j] = current.array[i][j];
+		}
+	}
+}
+
+void clearCompletedRow(int row);
+void generateNewShape();
+
+void handleFailedMove() {
+	title();
+	int sum, count = 0;
+
+	for (int n = 0; n < FIELD_ROW; n++) {
+		sum = 0;
+
+		for (int m = 0; m < FIELD_COL; m++) {
+			sum += Table[n][m];
+		}
+
+		if (sum == FIELD_COL) {
+			count++;
+			clearCompletedRow(n);
+			time111.timer -= time111.decrease--;
+		}
+	}
+
+	final += 100 * count;
+	generateNewShape();
+	if (!FunctionCP(current)) {
+		GameOn = false;
+	}
+}
+
+void clearCompletedRow(int row) {
+	int l, k;
+	for (k = row; k >= 1; k--) {
+		for (l = 0; l < FIELD_COL; l++) {
+			Table[k][l] = Table[k - 1][l];
+		}
+	}
+
+	for (l = 0; l < FIELD_COL; l++) {
+		Table[k][l] = 0;
+	}
+}
+
+void generateNewShape() {
+	Struct new_shape = FunctionCS(StructsArray[rand() % 7]);
+	new_shape.col = rand() % (FIELD_COL - new_shape.width + 1);
+	new_shape.row = 0;
+	freeShapeArray(current);
+	current = new_shape;
+}
+
 int main() {
-    srand(time(0));
-    final = 0;
-    int c;
-    initscr();
+	srand(time(0));
+	final = 0;
+	int c;
+	initscr();
 	gettimeofday(&before_now, NULL);
 	set_timeout(1);
 	Struct new_shape = FunctionCS(StructsArray[rand()%7]);
-    new_shape.col = rand()%(FIELD_COL-new_shape.width+1);
-    new_shape.row = 0;
-    FunctionDS(current);
+	new_shape.col = rand()%(FIELD_COL-new_shape.width+1);
+	new_shape.row = 0;
+	freeShapeArray(current);
 	current = new_shape;
 	if(!FunctionCP(current)){
-		GameOn = F;
+		GameOn = false;
 	}
-    FunctionPT();
+	FunctionPT();
 	while(GameOn){
 		if ((c = getch()) != ERR) {
 			Struct temp = FunctionCS(current);
@@ -127,12 +197,7 @@ int main() {
 					if(FunctionCP(temp))
 						current.row++;
 					else {
-						for(int i = 0; i < current.width ;i++){
-							for(int j = 0; j < current.width ; j++){
-								if(current.array[i][j])
-									Table[current.row+i][current.col+j] = current.array[i][j];
-							}
-						}
+						title();
 						int sum, count=0;
 						for(int n=0;n<FIELD_ROW;n++){
 							sum = 0;
@@ -154,10 +219,10 @@ int main() {
 						Struct new_shape = FunctionCS(StructsArray[rand()%7]);
 						new_shape.col = rand()%(FIELD_COL-new_shape.width+1);
 						new_shape.row = 0;
-						FunctionDS(current);
+						freeShapeArray(current);
 						current = new_shape;
 						if(!FunctionCP(current)){
-							GameOn = F;
+							GameOn = false;
 						}
 					}
 					break;
@@ -177,81 +242,36 @@ int main() {
 						FunctionRS(current);
 					break;
 			}
-			FunctionDS(temp);
+			freeShapeArray(temp);
 			FunctionPT();
 		}
 		gettimeofday(&now, NULL);
 		if (hasToUpdate()) {
 			Struct temp = FunctionCS(current);
-			switch('s'){
-				case 's':
-					temp.row++;
-					if(FunctionCP(temp))
+			// switch ('s') {
+			// 	case 's': {
+			// 		temp.row++;
+			// 		if (FunctionCP(temp)) {
+			// 			current.row++;
+			// 		} else {
+			// 			handleFailedMove();
+			// 		}
+			// 		break;
+			// 	}
+			// }
+								temp.row++;
+					if (FunctionCP(temp))
 						current.row++;
-					else {
-						for(int i = 0; i < current.width ;i++){
-							for(int j = 0; j < current.width ; j++){
-								if(current.array[i][j])
-									Table[current.row + i][current.col + j] = current.array[i][j];
-							}
-						}
-						int sum, count=0;
-						for(int n=0;n<FIELD_ROW;n++){
-							sum = 0;
-							for(int m=0;m< FIELD_COL;m++) {
-								sum+=Table[n][m];
-							}
-							if(sum==FIELD_COL){
-								count++;
-								int l, k;
-								for(k = n;k >=1;k--)
-									for(l=0;l<FIELD_COL;l++)
-										Table[k][l]=Table[k-1][l];
-								for(l=0;l<FIELD_COL;l++)
-									Table[k][l]=0;
-								time111.timer-=time111.decrease--;
-							}
-						}
-						Struct new_shape = FunctionCS(StructsArray[rand()%7]);
-						new_shape.col = rand()%(FIELD_COL-new_shape.width+1);
-						new_shape.row = 0;
-						FunctionDS(current);
-						current = new_shape;
-						if(!FunctionCP(current)){
-							GameOn = F;
-						}
-					}
-					break;
-				case 'd':
-					temp.col++;
-					if(FunctionCP(temp))
-						current.col++;
-					break;
-				case 'a':
-					temp.col--;
-					if(FunctionCP(temp))
-						current.col--;
-					break;
-				case 'w':
-					FunctionRS(temp);
-					if(FunctionCP(temp))
-						FunctionRS(current);
-					break;
-			}
-			FunctionDS(temp);
+					else
+						handleFailedMove();
+
+			freeShapeArray(temp);
 			FunctionPT();
 			gettimeofday(&before_now, NULL);
 		}
 	}
-	FunctionDS(current);
+	freeShapeArray(current);
 	endwin();
-	for(int i = 0; i < FIELD_ROW; i++){
-		for(int j = 0; j < FIELD_COL; j++){
-			printf("%c ", Table[i][j] ? '#': '.');
-		}
-		printf("\n");
-	}
-	printf("\nGame over!\n");
-	printf("\nScore: %d\n", final);
-    return 0;
+	displayGameOver();
+ return 0;
 }
