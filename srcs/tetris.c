@@ -152,14 +152,14 @@ void handleFailedMove() {
 }
 
 void clearCompletedRow(int row) {
-	int l, k;
+	int k;
 	for (k = row; k >= 1; k--) {
-		for (l = 0; l < FIELD_COL; l++) {
+		for (int l = 0; l < FIELD_COL; l++) {
 			Table[k][l] = Table[k - 1][l];
 		}
 	}
 
-	for (l = 0; l < FIELD_COL; l++) {
+	for (int l = 0; l < FIELD_COL; l++) {
 		Table[k][l] = 0;
 	}
 }
@@ -248,23 +248,11 @@ int main() {
 		gettimeofday(&now, NULL);
 		if (hasToUpdate()) {
 			Struct temp = FunctionCS(current);
-			// switch ('s') {
-			// 	case 's': {
-			// 		temp.row++;
-			// 		if (FunctionCP(temp)) {
-			// 			current.row++;
-			// 		} else {
-			// 			handleFailedMove();
-			// 		}
-			// 		break;
-			// 	}
-			// }
-								temp.row++;
-					if (FunctionCP(temp))
-						current.row++;
-					else
-						handleFailedMove();
-
+			temp.row++;
+			if (FunctionCP(temp))
+				current.row++;
+			else
+				handleFailedMove();
 			freeShapeArray(temp);
 			FunctionPT();
 			gettimeofday(&before_now, NULL);
