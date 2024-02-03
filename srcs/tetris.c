@@ -6,8 +6,8 @@
 char Table[FIELD_ROW][FIELD_COL] = {0};
 int final = 0;
 char GameOn = T;
-suseconds_t timer = 400000;
-int decrease = 1000;
+
+t_time time111 = {.timer = 400000, .decrease = 1000};
 
 typedef struct {
 	char **array;
@@ -94,7 +94,7 @@ void FunctionPT(){
 
 struct timeval before_now, now;
 int hasToUpdate(){
-	return ((suseconds_t)(now.tv_sec*1000000 + now.tv_usec) -((suseconds_t)before_now.tv_sec*1000000 + before_now.tv_usec)) > timer;
+	return ((suseconds_t)(now.tv_sec*1000000 + now.tv_usec) -((suseconds_t)before_now.tv_sec*1000000 + before_now.tv_usec)) > time111.timer;
 }
 
 void set_timeout(int time) {
@@ -147,7 +147,7 @@ int main() {
 										Table[k][l]=Table[k-1][l];
 								for(l=0;l<FIELD_COL;l++)
 									Table[k][l]=0;
-								timer-=decrease--;
+								time111.timer-=time111.decrease--;
 							}
 						}
 						final += 100*count;
@@ -209,7 +209,7 @@ int main() {
 										Table[k][l]=Table[k-1][l];
 								for(l=0;l<FIELD_COL;l++)
 									Table[k][l]=0;
-								timer-=decrease--;
+								time111.timer-=time111.decrease--;
 							}
 						}
 						Struct new_shape = FunctionCS(StructsArray[rand()%7]);
@@ -245,8 +245,8 @@ int main() {
 	}
 	FunctionDS(current);
 	endwin();
-	for(int i = 0; i < FIELD_ROW ;i++){
-		for(int j = 0; j < FIELD_COL ; j++){
+	for(int i = 0; i < FIELD_ROW; i++){
+		for(int j = 0; j < FIELD_COL; j++){
 			printf("%c ", Table[i][j] ? '#': '.');
 		}
 		printf("\n");
